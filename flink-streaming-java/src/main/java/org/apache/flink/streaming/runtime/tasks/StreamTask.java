@@ -842,6 +842,8 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 		if (isRunning) {
 			actionExecutor.runThrowing(() -> {
 
+				final CheckpointMetaData tmpCheckpointMetaData =
+					new CheckpointMetaData(checkpointMetaData.getCheckpointId(),checkpointMetaData.getTimestamp());
 				if (checkpointOptions.getCheckpointType().isSynchronous()) {
 					setSynchronousSavepointId(checkpointId);
 
@@ -862,12 +864,12 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 				// Step (2): Send the checkpoint barrier downstream
 				operatorChain.broadcastCheckpointBarrier(
 						checkpointId,
-						checkpointMetaData.getTimestamp(),
+						tmpCheckpointMetaData.getTimestamp(),
 						checkpointOptions);
 
 				// Step (3): Take the state snapshot. This should be largely asynchronous, to not
 				//           impact progress of the streaming topology
-				checkpointState(checkpointMetaData, checkpointOptions, checkpointMetrics);
+				checkpointState(tmpCheckpointMetaData, checkpointOptions, checkpointMetrics);
 
 			});
 
